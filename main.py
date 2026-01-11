@@ -50,19 +50,20 @@ def chat(req: ChatRequest):
     print(req)
     try:
         input_messages = [
-            {
-                "role": "system",
-                "content": [{"type": "text", "text": req.system}]
-            }
+            # {
+            #     "role": "system",
+            #     "content": [{"type": "text", "text": req.system}]
+            # }
         ]
 
         for m in req.messages:
             input_messages.append({
                 "role": m.role,
-                "content": [{"type": "text", "text": m.content}]
+                "content": [{"type": "input_text", "text": m.content}]
             })
 
         response = client.responses.create(
+            instructions=req.system,
             model="gpt-4.1",
             input="Tell me a three sentence bedtime story about a unicorn.",
             # temperature=0.7

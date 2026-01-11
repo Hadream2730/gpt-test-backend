@@ -22,6 +22,11 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     content: str
 
+
+@app.get("/")
+async def root():
+    return {"message": "GPT Test Backend API is running"}
+
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
     try:

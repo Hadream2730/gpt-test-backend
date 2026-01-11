@@ -45,7 +45,7 @@ app.add_middleware(
 async def root():
     return {"message": "GPT Test Backend API is running"}
 
-app.post("/chat")
+@app.post("/chat")
 def chat(req: ChatRequest):
     print(req)
     try:

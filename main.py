@@ -64,13 +64,13 @@ def chat(req: ChatRequest):
 
         response = client.responses.create(
             model="gpt-4.1",
-            input=input_messages,
-            temperature=0.7
+            input="Tell me a three sentence bedtime story about a unicorn.",
+            # temperature=0.7
         )
 
         return {
             "error": False,
-            "content": response.output_text
+            "content": response.output
         }
 
     # ---- OpenAI-specific errors ----

@@ -47,6 +47,7 @@ async def root():
 
 app.post("/chat")
 def chat(req: ChatRequest):
+    print(req)
     try:
         input_messages = [
             {

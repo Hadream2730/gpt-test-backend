@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from typing import List
 from dotenv import load_dotenv
 from openai import OpenAI
+from fastapi.middleware.cors import CORSMiddleware
+
 
 load_dotenv()
 
@@ -21,6 +23,15 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     content: str
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],        # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],        # Allow all HTTP methods
+    allow_headers=["*"],        # Allow all headers
+)
 
 
 @app.get("/")

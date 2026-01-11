@@ -65,7 +65,7 @@ def chat(req: ChatRequest):
         response = client.responses.create(
             instructions=req.system,
             model="gpt-4.1",
-            input="Tell me a three sentence bedtime story about a unicorn.",
+            input=input_messages,
             # temperature=0.7
         )
 

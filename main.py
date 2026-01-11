@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from typing import List
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai import OpenAIError
+from fastapi import status
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -24,6 +26,11 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     content: str
 
+class ErrorResponse(BaseModel):
+    error: bool = True
+    type: str
+    message: str
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,7 +45,7 @@ app.add_middleware(
 async def root():
     return {"message": "GPT Test Backend API is running"}
 
-@app.post("/chat", response_model=ChatResponse)
+app.post("/chat")
 def chat(req: ChatRequest):
     try:
         input_messages = [
@@ -60,7 +67,29 @@ def chat(req: ChatRequest):
             temperature=0.7
         )
 
-        return ChatResponse(content=response.output_text)
+        return {
+            "error": False,
+            "content": response.output_text
+        }
 
+    # ---- OpenAI-specific errors ----
+    except OpenAIError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={
+                "error": True,
+                "type": "openai_error",
+                "message": str(e)
+            }
+        )
+
+    # ---- Any other backend error ----
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": True,
+                "type": "server_error",
+                "message": "Internal server error"
+            }
+        )

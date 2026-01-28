@@ -22,6 +22,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     system: str
     messages: List[Message]
+    conversation_id: str = None  # Optional - for continuing conversations
 
 class ChatResponse(BaseModel):
     content: str
@@ -47,34 +48,34 @@ async def root():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    print(req)
     try:
         input_messages = [
-            # {
-            #     "role": "system",
-            #     "content": [{"type": "text", "text": req.system}]
-            # }
+            {
+                "role": m.role,
+                "content": m.content
+            }
+            for m in req.messages
         ]
 
-        for m in req.messages:
-            input_messages.append({
-                "role": m.role,
-                "content": [{"type": "input_text", "text": m.content}]
-            })
+        # Build the request parameters
+        request_params = {
+            "model": "gpt-4.1-mini",
+            "instructions": req.system,
+            "input": input_messages,
+        }
+        
+        # Add conversation_id if provided (for continuing conversations)
+        if req.conversation_id:
+            request_params["conversation_id"] = req.conversation_id
 
-        response = client.responses.create(
-            instructions=req.system,
-            model="gpt-4.1",
-            input=input_messages,
-            # temperature=0.7
-        )
+        response = client.responses.create(**request_params)
 
         return {
             "error": False,
-            "content": response.output
+            "content": response.output_text,
+            "conversation_id": getattr(response, 'conversation_id', None)  # Return conversation_id if available
         }
 
-    # ---- OpenAI-specific errors ----
     except OpenAIError as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -82,16 +83,5 @@ def chat(req: ChatRequest):
                 "error": True,
                 "type": "openai_error",
                 "message": str(e)
-            }
-        )
-
-    # ---- Any other backend error ----
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": True,
-                "type": "server_error",
-                "message": "Internal server error"
             }
         )

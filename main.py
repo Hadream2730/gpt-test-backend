@@ -23,6 +23,7 @@ class ChatRequest(BaseModel):
     system: str
     messages: List[Message]
     conversation_id: str = None  # Optional - for continuing conversations
+    model: str = "gpt-4.1-mini"  # Model name, e.g. gpt-4.1-mini
 
 class ChatResponse(BaseModel):
     content: str
@@ -57,9 +58,10 @@ def chat(req: ChatRequest):
             for m in req.messages
         ]
 
-        # Build the request parameters
+        # Build the request parameters (use model from request or default)
+        model_name = (req.model or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
         request_params = {
-            "model": "gpt-4.1-mini",
+            "model": model_name,
             "instructions": req.system,
             "input": input_messages,
         }
